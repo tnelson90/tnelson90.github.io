@@ -1,5 +1,5 @@
 """Application logic for Grazioso Salvare rescue filtering."""
-
+import heapq
 
 RESCUE_CRITERIA = {
     "water": {
@@ -11,7 +11,13 @@ RESCUE_CRITERIA = {
         ],
         "sex": "Intact Female",
         "min_age": 26,
-        "max_age": 156
+        "max_age": 156,
+        "weights": {
+            "breed": 40,
+            "age": 30,
+            "sex": 20
+        },
+        "minimum_score": 50
     },
 
     "mountain": {
@@ -25,7 +31,13 @@ RESCUE_CRITERIA = {
         ],
         "sex": "Intact Male",
         "min_age": 26,
-        "max_age": 156
+        "max_age": 156,
+        "weights": {
+            "breed": 40,
+            "age": 30,
+            "sex": 20
+        },
+        "minimum_score": 50
     },
 
     "disaster": {
@@ -39,9 +51,14 @@ RESCUE_CRITERIA = {
         ],
         "sex": "Intact Male",
         "min_age": 20,
-        "max_age": 300
+        "max_age": 300,
+        "weights": {
+            "breed": 40,
+            "age": 30,
+            "sex": 20
+        },
+        "minimum_score": 50
     }
-}
 
 
 def build_rescue_query(rescue_type):
@@ -56,22 +73,80 @@ def build_rescue_query(rescue_type):
     criteria = RESCUE_CRITERIA[rescue_type]
 
     return {
-        "$and": [
-            {"animal_type": criteria["animal_type"]},
-            {"breed": {"$in": criteria["breeds"]}},
-            {"sex_upon_outcome": criteria["sex"]},
-            {
-                "age_upon_outcome_in_weeks": {
-                    "$gte": criteria["min_age"],
-                    "$lte": criteria["max_age"]
-                }
-            }
-        ]
+        "animal_type": criteria["animal_type"]
     }
 
+def calculate_suitability_score(animal, rescue_type):
+    """Calculate an animal's suitability score for a rescue category."""
+
+    if rescue_type not in RESCUE_CRITERIA:
+        raise ValueError(f"Invalid rescue type: {rescue_type}")
+
+    criteria = RESCUE_CRITERIA[rescue_type]
+    weights = criteria["weights"]
+
+    score = 0
+
+    # Award points for a preferred breed.
+    if animal.get("breed") in criteria["breeds"]:
+        score += weights["breed"]
+
+    # Award points when age falls within the preferred range.
+    age = animal.get("age_upon_outcome_in_weeks")
+
+    if age is not None:
+        try:
+            age = float(age)
+
+            if criteria["min_age"] <= age <= criteria["max_age"]:
+                score += weights["age"]
+
+        except (TypeError, ValueError):
+            pass
+
+    # Award points for the preferred sex.
+    if animal.get("sex_upon_outcome") == criteria["sex"]:
+        score += weights["sex"]
+
+    return score
+
+def rank_rescue_candidates(animals, rescue_type):
+    """Rank qualifying animals using a priority queue."""
+
+    if rescue_type not in RESCUE_CRITERIA:
+        raise ValueError(f"Invalid rescue type: {rescue_type}")
+
+    criteria = RESCUE_CRITERIA[rescue_type]
+    priority_queue = []
+
+    for index, animal in enumerate(animals):
+        score = calculate_suitability_score(animal, rescue_type)
+
+        if score >= criteria["minimum_score"]:
+            heapq.heappush(
+                priority_queue,
+                (-score, index, animal)
+            )
+
+    ranked_results = []
+
+    while priority_queue:
+        negative_score, _, animal = heapq.heappop(priority_queue)
+
+        ranked_animal = animal.copy()
+        ranked_animal["suitability_score"] = -negative_score
+
+        ranked_results.append(ranked_animal)
+
+    return ranked_results
 
 def get_rescue_candidates(database, rescue_type):
-    """Retrieve animals matching the selected rescue category."""
+    """Retrieve and rank animals for the selected rescue category."""
 
     query = build_rescue_query(rescue_type)
-    return database.read(query)
+    animals = database.read(query)
+
+    if rescue_type == "reset":
+        return animals
+
+    return rank_rescue_candidates(animals, rescue_type)

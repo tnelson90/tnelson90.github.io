@@ -1,4 +1,4 @@
-"""Application logic for Grazioso Salvare rescue filtering."""
+"""Application logic for Grazioso Salvare rescue filtering and ranking."""
 import heapq
 
 RESCUE_CRITERIA = {
@@ -59,6 +59,7 @@ RESCUE_CRITERIA = {
         },
         "minimum_score": 50
     }
+}
 
 
 def build_rescue_query(rescue_type):

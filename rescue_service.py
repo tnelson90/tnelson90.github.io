@@ -63,7 +63,7 @@ RESCUE_CRITERIA = {
 
 
 def build_rescue_query(rescue_type):
-    """Build a MongoDB query for the selected rescue category."""
+    """Build an optimized MongoDB query for the selected rescue category."""
 
     if rescue_type == "reset":
         return {}
@@ -74,7 +74,17 @@ def build_rescue_query(rescue_type):
     criteria = RESCUE_CRITERIA[rescue_type]
 
     return {
-        "animal_type": criteria["animal_type"]
+        "animal_type": criteria["animal_type"],
+        "$or": [
+            {"breed": {"$in": criteria["breeds"]}},
+            {
+                "age_upon_outcome_in_weeks": {
+                    "$gte": criteria["min_age"],
+                    "$lte": criteria["max_age"]
+                }
+            },
+            {"sex_upon_outcome": criteria["sex"]}
+        ]
     }
 
 def calculate_suitability_score(animal, rescue_type):

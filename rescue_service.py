@@ -61,6 +61,19 @@ RESCUE_CRITERIA = {
     }
 }
 
+RESCUE_PROJECTION = {
+    "_id": 0,
+    "animal_id": 1,
+    "name": 1,
+    "animal_type": 1,
+    "breed": 1,
+    "color": 1,
+    "date_of_birth": 1,
+    "age_upon_outcome_in_weeks": 1,
+    "sex_upon_outcome": 1,
+    "location_lat": 1,
+    "location_long": 1
+}
 
 def build_rescue_query(rescue_type):
     """Build an optimized MongoDB query for the selected rescue category."""
@@ -152,10 +165,14 @@ def rank_rescue_candidates(animals, rescue_type):
     return ranked_results
 
 def get_rescue_candidates(database, rescue_type):
-    """Retrieve and rank animals for the selected rescue category."""
+    """Retrieve only required animal fields and rank rescue candidates."""
 
     query = build_rescue_query(rescue_type)
-    animals = database.read(query)
+
+    animals = database.read(
+        query,
+        projection=RESCUE_PROJECTION
+    )
 
     if rescue_type == "reset":
         return animals

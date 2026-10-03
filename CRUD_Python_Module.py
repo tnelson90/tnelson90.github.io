@@ -1,122 +1,201 @@
+"""
+MongoDB data-access module for the Grazioso Salvare application.
 
+CS 499 Database Enhancement
+"""
 
-from pymongo import MongoClient
+import os
+
+from pymongo import ASCENDING, MongoClient
 from pymongo.errors import PyMongoError
 
-from config import (
-    MONGO_USER,
-    MONGO_PASSWORD,
-    MONGO_HOST,
-    MONGO_PORT,
-    MONGO_DB,
-    MONGO_COLLECTION,
-    validate_config
-) 
 
-class AnimalShelter(object): 
-    """ CRUD operations for Animal collection in MongoDB """ 
+class AnimalShelter:
+    """Provides validated CRUD operations for the animal collection."""
 
     def __init__(self):
-        """Initialize the MongoDB connection and animal collection."""
-    
-        validate_config()
-    
+        # Database configuration is read from environment variables instead
+        # of storing credentials directly in the source code.
+        user = os.getenv("AAC_USER", "aacuser")
+        password = os.getenv("AAC_PASS")
+
+        if not password:
+            raise ValueError(
+                "MongoDB password is not configured. "
+                "Set the AAC_PASS environment variable."
+            )
+
+        host = os.getenv("AAC_HOST", "localhost")
+        port = int(os.getenv("AAC_PORT", "27017"))
+        database_name = os.getenv("AAC_DB", "aac")
+        collection_name = os.getenv("AAC_COLLECTION", "animals")
+
         try:
             self.client = MongoClient(
-                MONGO_HOST,
-                MONGO_PORT,
-                username=MONGO_USER,
-                password=MONGO_PASSWORD
+                host=host,
+                port=port,
+                username=user,
+                password=password,
+                authSource=database_name,
+                serverSelectionTimeoutMS=5000
             )
-    
-            self.database = self.client[MONGO_DB]
-            self.collection = self.database[MONGO_COLLECTION]
-    
+
+            self.database = self.client[database_name]
+            self.collection = self.database[collection_name]
+
+            # Verify that MongoDB is reachable when the object is created.
             self.client.admin.command("ping")
-    
+
+            # Create indexes used by the application's rescue queries.
+            self.ensure_indexes()
+
         except PyMongoError as error:
             raise ConnectionError(
                 f"Unable to connect to MongoDB: {error}"
-            ) from error 
+            ) from error
 
-    # Create a method to return the next available record number for use in the create method
-            
-    # Complete this create method to implement the C in CRUD. 
+    @staticmethod
+    def _validate_dictionary(value, name, allow_empty=False):
+        """Validate dictionary input before it is sent to MongoDB."""
+        if not isinstance(value, dict):
+            raise TypeError(f"{name} must be a dictionary.")
+
+        if not allow_empty and not value:
+            raise ValueError(f"{name} cannot be empty.")
+
+    def ensure_indexes(self):
+        """
+        Create indexes for fields commonly used by rescue-candidate queries.
+        """
+        try:
+            self.collection.create_index(
+                [
+                    ("animal_type", ASCENDING),
+                    ("breed", ASCENDING),
+                    ("sex_upon_outcome", ASCENDING),
+                    ("age_upon_outcome_in_weeks", ASCENDING)
+                ],
+                name="rescue_candidate_idx"
+            )
+
+        except PyMongoError as error:
+            raise RuntimeError(
+                f"Unable to create MongoDB indexes: {error}"
+            ) from error
+
     def create(self, data):
-        """Create a new animal record."""
-    
-        if not isinstance(data, dict) or not data:
-            raise ValueError("Data must be provided as a non-empty dictionary.")
-    
+        """Insert one animal document and return its inserted ID."""
+        self._validate_dictionary(data, "data")
+
         try:
             result = self.collection.insert_one(data)
-            return result.acknowledged
-    
-        except PyMongoError as error:
-            print(f"Error creating animal record: {error}")
-            return False 
 
-    # Create method to implement the R in CRUD.
-    def read(self, query=None):
-        """Read animal records matching the supplied query."""
-    
+            if result.acknowledged:
+                return result.inserted_id
+
+            return None
+
+        except PyMongoError as error:
+            raise RuntimeError(
+                f"Unable to create animal record: {error}"
+            ) from error
+
+    def read(self, query=None, projection=None, limit=0):
+        """
+        Retrieve animal documents matching a query.
+
+        projection can be used to request only fields needed by the
+        application instead of retrieving every field in each document.
+        """
         if query is None:
             query = {}
-    
-        if not isinstance(query, dict):
-            raise ValueError("Query must be a dictionary.")
-    
+
+        self._validate_dictionary(query, "query", allow_empty=True)
+
+        if projection is not None:
+            self._validate_dictionary(
+                projection,
+                "projection",
+                allow_empty=True
+            )
+
+        if not isinstance(limit, int) or limit < 0:
+            raise ValueError("limit must be a non-negative integer.")
+
         try:
-            return list(self.collection.find(query))
-    
+            cursor = self.collection.find(query, projection)
+
+            if limit > 0:
+                cursor = cursor.limit(limit)
+
+            return list(cursor)
+
         except PyMongoError as error:
-            print(f"Error reading animal records: {error}")
-            return []
-            
-    # Update document(s) that match query; returns number modified
+            raise RuntimeError(
+                f"Unable to read animal records: {error}"
+            ) from error
+
     def update(self, query, new_values, many=False):
-        """Update one or more animal records."""
-    
-        if not isinstance(query, dict) or not query:
-            raise ValueError("Query must be a non-empty dictionary.")
-    
-        if not isinstance(new_values, dict) or not new_values:
-            raise ValueError("New values must be a non-empty dictionary.")
-    
-        payload = (
-            new_values
-            if any(str(key).startswith("$") for key in new_values)
-            else {"$set": new_values}
-        )
-    
+        """
+        Update matching animal records.
+
+        Returns information about both matched and modified documents.
+        """
+        self._validate_dictionary(query, "query")
+        self._validate_dictionary(new_values, "new_values")
+
+        if not isinstance(many, bool):
+            raise TypeError("many must be True or False.")
+
+        # Allow MongoDB update operators or automatically use $set
+        # for a normal dictionary of field/value pairs.
+        if any(str(key).startswith("$") for key in new_values):
+            payload = new_values
+        else:
+            payload = {"$set": new_values}
+
         try:
             if many:
                 result = self.collection.update_many(query, payload)
             else:
                 result = self.collection.update_one(query, payload)
-    
-            return result.modified_count
-    
+
+            return {
+                "matched_count": result.matched_count,
+                "modified_count": result.modified_count,
+                "acknowledged": result.acknowledged
+            }
+
         except PyMongoError as error:
-            print(f"Error updating animal record: {error}")
-            return 0
-            
-    # Delete document(s) that match query; returns number removed
+            raise RuntimeError(
+                f"Unable to update animal record: {error}"
+            ) from error
+
     def delete(self, query, many=False):
-        """Delete one or more animal records."""
-    
-        if not isinstance(query, dict) or not query:
-            raise ValueError("Query must be a non-empty dictionary.")
-    
+        """
+        Delete matching animal records and return the number deleted.
+        """
+        self._validate_dictionary(query, "query")
+
+        if not isinstance(many, bool):
+            raise TypeError("many must be True or False.")
+
         try:
             if many:
                 result = self.collection.delete_many(query)
             else:
                 result = self.collection.delete_one(query)
-    
-            return result.deleted_count
-    
-        except PyMongoError as error:
-            print(f"Error deleting animal record: {error}")
-            return 0
 
+            return {
+                "deleted_count": result.deleted_count,
+                "acknowledged": result.acknowledged
+            }
+
+        except PyMongoError as error:
+            raise RuntimeError(
+                f"Unable to delete animal record: {error}"
+            ) from error
+
+    def close(self):
+        """Close the MongoDB client connection."""
+        self.client.close()

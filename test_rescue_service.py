@@ -1,8 +1,10 @@
 import unittest
 
 from rescue_service import (
+    RESCUE_PROJECTION,
     build_rescue_query,
     calculate_suitability_score,
+    get_rescue_candidates,
     rank_rescue_candidates
 )
 
@@ -89,6 +91,88 @@ class TestRescueService(unittest.TestCase):
         score = calculate_suitability_score(animal, "water")
     
         self.assertEqual(score, 60)
+    def test_water_query_contains_database_filters(self):
+        """Water rescue query should include MongoDB filtering criteria."""
+
+        query = build_rescue_query("water")
+
+        self.assertEqual(query["animal_type"], "Dog")
+        self.assertIn("$or", query)
+        self.assertEqual(len(query["$or"]), 3)
+
+        self.assertIn(
+            "Labrador Retriever Mix",
+            query["$or"][0]["breed"]["$in"]
+        )
+
+        age_filter = query["$or"][1]["age_upon_outcome_in_weeks"]
+        self.assertEqual(age_filter["$gte"], 26)
+        self.assertEqual(age_filter["$lte"], 156)
+
+        self.assertEqual(
+            query["$or"][2]["sex_upon_outcome"],
+            "Intact Female"
+        )
+
+    def test_projection_excludes_mongodb_id(self):
+        """Projection should exclude MongoDB ID and include dashboard fields."""
+
+        self.assertEqual(RESCUE_PROJECTION["_id"], 0)
+        self.assertEqual(RESCUE_PROJECTION["animal_id"], 1)
+        self.assertEqual(RESCUE_PROJECTION["breed"], 1)
+        self.assertEqual(RESCUE_PROJECTION["location_lat"], 1)
+        self.assertEqual(RESCUE_PROJECTION["location_long"], 1)
+
+    def test_database_read_uses_query_and_projection(self):
+        """Rescue retrieval should send the query and projection to MongoDB."""
+
+        class FakeDatabase:
+            def __init__(self):
+                self.query = None
+                self.projection = None
+
+            def read(self, query, projection=None):
+                self.query = query
+                self.projection = projection
+                return []
+
+        database = FakeDatabase()
+
+        results = get_rescue_candidates(database, "water")
+
+        self.assertEqual(results, [])
+        self.assertEqual(
+            database.query,
+            build_rescue_query("water")
+        )
+        self.assertEqual(
+            database.projection,
+            RESCUE_PROJECTION
+        )
+
+    def test_reset_uses_projection(self):
+        """Reset should retrieve all animals using only required fields."""
+
+        class FakeDatabase:
+            def __init__(self):
+                self.query = None
+                self.projection = None
+
+            def read(self, query, projection=None):
+                self.query = query
+                self.projection = projection
+                return [{"name": "Test Animal"}]
+
+        database = FakeDatabase()
+
+        results = get_rescue_candidates(database, "reset")
+
+        self.assertEqual(database.query, {})
+        self.assertEqual(
+            database.projection,
+            RESCUE_PROJECTION
+        )
+        self.assertEqual(results, [{"name": "Test Animal"}])
 
 
 if __name__ == "__main__":

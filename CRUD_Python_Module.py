@@ -4,44 +4,40 @@ MongoDB data-access module for the Grazioso Salvare application.
 CS 499 Database Enhancement
 """
 
-import os
-
 from pymongo import ASCENDING, MongoClient
 from pymongo.errors import PyMongoError
 
+from config import (
+    MONGO_USER,
+    MONGO_PASSWORD,
+    MONGO_HOST,
+    MONGO_PORT,
+    MONGO_DB,
+    MONGO_COLLECTION,
+    validate_config
+)
 
 class AnimalShelter:
     """Provides validated CRUD operations for the animal collection."""
 
     def __init__(self):
-        # Database configuration is read from environment variables instead
-        # of storing credentials directly in the source code.
-        user = os.getenv("AAC_USER", "aacuser")
-        password = os.getenv("AAC_PASS")
-
-        if not password:
-            raise ValueError(
-                "MongoDB password is not configured. "
-                "Set the AAC_PASS environment variable."
-            )
-
-        host = os.getenv("AAC_HOST", "localhost")
-        port = int(os.getenv("AAC_PORT", "27017"))
-        database_name = os.getenv("AAC_DB", "aac")
-        collection_name = os.getenv("AAC_COLLECTION", "animals")
-
+        """Initialize and verify the MongoDB connection."""
+    
+        # Validate required configuration before attempting a connection.
+        validate_config()
+    
         try:
             self.client = MongoClient(
-                host=host,
-                port=port,
-                username=user,
-                password=password,
-                authSource=database_name,
+                host=MONGO_HOST,
+                port=MONGO_PORT,
+                username=MONGO_USER,
+                password=MONGO_PASSWORD,
+                authSource=MONGO_DB,
                 serverSelectionTimeoutMS=5000
             )
-
-            self.database = self.client[database_name]
-            self.collection = self.database[collection_name]
+            
+            self.database = self.client[MONGO_DB]
+            self.collection = self.database[MONGO_COLLECTION]
 
             # Verify that MongoDB is reachable when the object is created.
             self.client.admin.command("ping")

@@ -207,10 +207,107 @@
   </p>
 </section>
 
-  <section id="engineering">
-    <h2>Software Engineering and Design</h2>
-    <p>Enhancement One and narrative.</p>
-  </section>
+<section id="engineering">
+  <h2>Enhancement One: Software Engineering and Design</h2>
+
+  <h3>Enhancement Overview</h3>
+
+  <p>
+    For my first CS 499 enhancement, I improved the
+    software engineering and design of the Grazioso
+    Salvare application originally developed in CS 340.
+    The application uses Python, MongoDB, and an
+    interactive dashboard to help users identify
+    potential rescue-training candidates.
+  </p>
+
+  <h3>Changes Made</h3>
+
+  <p>
+    One of the main improvements was organizing
+    application responsibilities into separate
+    Python modules. The rescue_service.py module
+    handles rescue criteria and application logic,
+    while CRUD_Python_Module.py provides database
+    access functionality.
+  </p>
+
+  <p>
+    I also introduced config.py to manage MongoDB
+    connection settings through environment variables.
+    This helps separate configuration from the
+    application code and avoids requiring database
+    passwords to be written directly into the
+    source files.
+  </p>
+
+  <p>
+    Automated tests in test_rescue_service.py
+    check filtering behavior, invalid rescue
+    categories, suitability scoring, and database
+    query construction.
+  </p>
+
+  <h3>Design Decisions and Benefits</h3>
+
+  <p>
+    Separating application logic from database
+    operations improves readability, maintainability,
+    and testability. Changes to rescue criteria
+    can be made without rewriting the database
+    access module.
+  </p>
+
+  <p>
+    The modular design also makes it easier to
+    test application behavior without requiring
+    a live MongoDB connection for every test.
+    These improvements support future maintenance
+    and extension of the application.
+  </p>
+
+  <h3>Enhanced Source Code</h3>
+
+  <ul>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/rescue_service.py">
+        Rescue Service Module
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/CRUD_Python_Module.py">
+        Enhanced Database Module
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/config.py">
+        Configuration Module
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/test_rescue_service.py">
+        Unit Tests
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/ProjectTwoDashboard.ipynb">
+        Enhanced Dashboard Notebook
+      </a>
+    </li>
+  </ul>
+
+  <h3>Course Outcomes</h3>
+
+  <p>
+    This enhancement demonstrates the use of
+    software engineering techniques to improve
+    maintainability and support future development.
+    It also demonstrates consideration of security
+    through configuration management and input
+    validation, as well as the use of automated
+    testing to evaluate software behavior.
+  </p>
+</section>
 
   <section id="algorithms">
     <h2>Algorithms and Data Structures</h2>

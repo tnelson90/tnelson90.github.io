@@ -337,10 +337,144 @@
   </p>
 </section>
 
-  <section id="algorithms">
-    <h2>Algorithms and Data Structures</h2>
-    <p>Enhancement Two and narrative.</p>
-  </section>
+<section id="algorithms">
+  <h2>Enhancement Two: Algorithms and Data Structures</h2>
+
+  <h3>Artifact Overview</h3>
+
+  <p>
+    For my second CS 499 enhancement, I expanded
+    the Grazioso Salvare application's rescue
+    filtering functionality. The original
+    application identified animals using
+    predefined characteristics, but it did
+    not rank candidates according to how
+    closely they matched rescue-training needs.
+  </p>
+
+  <h3>Enhancements Made</h3>
+
+  <p>
+    I developed a weighted scoring algorithm
+    that evaluates animal records using breed,
+    age, and sex. Preferred breeds receive
+    40 points, animals within the preferred
+    age range receive 30 points, and matching
+    sex characteristics receive 20 points.
+  </p>
+
+  <p>
+    Each rescue category has its own criteria.
+    Animals receiving at least 50 points
+    qualify for ranking. This provides more
+    information than a basic matching filter
+    because candidates can be compared
+    according to their suitability scores.
+  </p>
+
+  <h3>Priority Queue Implementation</h3>
+
+  <p>
+    I used Python's heapq module to implement
+    a priority queue. The algorithm calculates
+    each animal's suitability score, inserts
+    qualifying candidates into the queue,
+    and retrieves them in descending score
+    order.
+  </p>
+
+  <p>
+    The priority queue uses negative scores
+    because Python's heapq implements a
+    min-heap. This allows the highest-scoring
+    candidate to be retrieved first.
+    Original record order is preserved
+    when candidates have equal scores.
+  </p>
+
+  <h3>Design Decisions and Benefits</h3>
+
+  <p>
+    The scoring system makes rescue-candidate
+    evaluation more flexible and useful.
+    Instead of treating all matching animals
+    equally, the application identifies
+    stronger candidates based on multiple
+    weighted characteristics.
+  </p>
+
+  <p>
+    The implementation also separates
+    candidate evaluation from the dashboard,
+    making it easier to adjust scoring
+    criteria or test the algorithm
+    independently.
+  </p>
+
+  <h3>Testing</h3>
+
+  <p>
+    Automated unit tests verify full and
+    partial suitability scores, candidate
+    ranking order, minimum qualification
+    requirements, and handling of missing
+    age information.
+  </p>
+
+  <h3>Course Outcomes</h3>
+
+  <p>
+    This enhancement primarily supports
+    Course Outcome Three through algorithm
+    design, data-structure selection,
+    and evaluation of implementation
+    trade-offs.
+  </p>
+
+  <p>
+    It also supports Course Outcome Four
+    by applying Python's priority queue
+    functionality to a practical problem
+    involving animal shelter data.
+  </p>
+
+  <h3>Enhanced Source Code</h3>
+
+  <ul>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/rescue_service.py">
+        Rescue Scoring and Ranking Algorithm
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/test_rescue_service.py">
+        Algorithm Unit Tests
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/ProjectTwoDashboard.ipynb">
+        Enhanced Dashboard
+      </a>
+    </li>
+  </ul>
+
+  <h3>Enhancement Two Narrative</h3>
+
+  <p>
+    The complete Milestone Three narrative
+    explains the algorithm, data-structure
+    selection, development challenges,
+    course outcomes, and lessons learned.
+  </p>
+
+  <p>
+    <a href="CS_499_Milestone_Three_Narrative.docx"
+       download>
+      Download Algorithms and Data Structures Narrative
+    </a>
+  </p>
+
+</section>
 
   <section id="databases">
     <h2>Databases</h2>

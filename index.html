@@ -476,10 +476,154 @@
 
 </section>
 
-  <section id="databases">
-    <h2>Databases</h2>
-    <p>Enhancement Three and narrative.</p>
-  </section>
+
+<section id="databases">
+  <h2>Enhancement Three: Databases</h2>
+
+  <h3>Artifact Overview</h3>
+
+  <p>
+    For my third CS 499 enhancement, I continued
+    improving the Grazioso Salvare application
+    originally developed in CS 340: Client/Server
+    Development. This enhancement focused on
+    the MongoDB database and the Python module
+    responsible for accessing animal shelter records.
+  </p>
+
+  <h3>Enhancements Made</h3>
+
+  <p>
+    The original application included basic
+    create, read, update, and delete operations.
+    I improved the database access layer by
+    strengthening input validation, using more
+    specific error handling, and improving
+    how the application constructs database queries.
+  </p>
+
+  <p>
+    I also added MongoDB indexing and query
+    projections to improve database efficiency.
+    Projections allow the application to retrieve
+    only the fields needed for a particular
+    operation rather than requesting unnecessary
+    information.
+  </p>
+
+  <p>
+    Another important improvement involved
+    moving database credentials and connection
+    settings into environment-based configuration.
+    This reduces the risk of exposing sensitive
+    information when publishing source code.
+  </p>
+
+  <h3>Database and Algorithm Integration</h3>
+
+  <p>
+    One of the main design decisions involved
+    determining how much filtering should be
+    performed by MongoDB and how much should
+    remain in Python.
+  </p>
+
+  <p>
+    MongoDB performs the initial filtering to
+    reduce the amount of unnecessary data
+    retrieved from the database. Python then
+    applies the weighted scoring algorithm
+    developed during Enhancement Two to rank
+    qualifying rescue candidates.
+  </p>
+
+  <p>
+    This approach allows the database and
+    application to handle the responsibilities
+    best suited to each component.
+  </p>
+
+  <h3>Challenges and Lessons Learned</h3>
+
+  <p>
+    A major challenge was improving database
+    efficiency without making the queries
+    too restrictive. Moving all rescue criteria
+    into MongoDB could exclude animals that
+    might still qualify through the weighted
+    ranking system.
+  </p>
+
+  <p>
+    This enhancement helped me better understand
+    how database design, indexing, projections,
+    validation, and error handling affect the
+    performance and reliability of an application.
+  </p>
+
+  <h3>Course Outcomes</h3>
+
+  <p>
+    This enhancement supports Course Outcome
+    Three through the evaluation of database
+    queries and application-side processing.
+  </p>
+
+  <p>
+    It supports Course Outcome Four through
+    the use of MongoDB, Python, indexing,
+    projections, and structured data access.
+  </p>
+
+  <p>
+    It also supports Course Outcome Five
+    through improved validation, controlled
+    database operations, error handling,
+    and secure configuration management.
+  </p>
+
+  <h3>Enhanced Source Code</h3>
+
+  <ul>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/CRUD_Python_Module.py">
+        Enhanced MongoDB CRUD Module
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/config.py">
+        Database Configuration Module
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/rescue_service.py">
+        Rescue Query and Ranking Service
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/tnelson90/tnelson90.github.io/blob/main/ProjectTwoDashboard.ipynb">
+        Enhanced Dashboard
+      </a>
+    </li>
+  </ul>
+
+  <h3>Enhancement Three Narrative</h3>
+
+  <p>
+    My complete Module Four narrative explains
+    the database improvements, design decisions,
+    course outcomes, challenges, and lessons
+    learned while completing this enhancement.
+  </p>
+
+  <p>
+    <a href="CS%20499_Milestone%20Four%20Narrative.docx"
+       download>
+      Download Database Enhancement Narrative
+    </a>
+  </p>
+
+</section>
 </main>
 
 </body>
